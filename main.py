@@ -52,7 +52,7 @@ def create_model(hiddenLayer, dropOut, dropSize):
 sgd = optimizers.SGD(lr=0.001)
 
 # Categorical cross-entropy loss function
-model = create_model(10, True, 0.2)
+model = create_model(10, False, 0.2)
 model.compile(
     optimizer=sgd,
     loss='categorical_crossentropy',
