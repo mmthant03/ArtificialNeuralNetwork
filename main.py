@@ -5,6 +5,7 @@ from keras.utils import to_categorical
 from keras import optimizers
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import StratifiedKFold
 from matplotlib import pyplot as plt
 
 # loading data from images.npy and labels.npy
@@ -81,6 +82,18 @@ prediction = model.predict(
 
 confusion = confusion_matrix(Y_test, np.argmax(prediction, axis=1))
 print(confusion)
+
+
+def cross_validation(model, imgData, labelData):
+    n_fold = 3
+    folds = StratifiedKFold(labelData, n_folds=n_fold, shuffle=True)
+
+    for i, (train,test) in enumerate(skf):
+        model = None
+        
+
+
+
 
 # plot the accuracy of training set and validation set over epochs
 plt.plot(history.history['acc'])
