@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.utils import to_categorical
@@ -120,27 +121,34 @@ def print_confusion_matrix(prediction):
 def cross_validation(model, imgData, labelData):
     n_fold = 3
     folds = StratifiedKFold(n_splits=n_fold, random_state=1, shuffle=True)
-    tempModel = model
+    tempModel = deepcopy(model)
+    accuracies = list()
     evaluation = None
     
     for train_index, test_index in folds.split(imgData, labelData):
         if(evaluation!=None):
             model = None
             model = tempModel
+            evaluation = None
         X_train, X_test = imgData[train_index], imgData[test_index]
         Y_train, Y_test = labelData[train_index], labelData[test_index]
-        history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test)
+        evaluation = train_evaluate(model, X_train, Y_train, X_test, Y_test)[1]
+        accuracies.append(evaluation[1])
+    return accuracies
 
 
 model = create_model(10, False, 0)
-history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test)
-print(evaluation)
-print_confusion_matrix(prediction)
-# plot the accuracy of training set and validation set over epochs
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'val'], loc='upper left')
-plt.show()
+# history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test)
+# print(evaluation)
+# print_confusion_matrix(prediction)
+# # plot the accuracy of training set and validation set over epochs
+# plt.plot(history.history['acc'])
+# plt.plot(history.history['val_acc'])
+# plt.title('model accuracy')
+# plt.ylabel('accuracy')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'val'], loc='upper left')
+# plt.show()
+
+evaluations = cross_validation(model, imgData, labelData)
+print(evaluations)
