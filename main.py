@@ -48,11 +48,44 @@ def create_model(hiddenLayer, dropOut, dropSize):
     #return this model
     return model
 
+def train_evaluate(model, X_train, Y_train, X_test, Y_test):
+    # Stochastic gradient descent with 0.001 learning rate
+    sgd = optimizers.SGD(lr=0.001)
+
+    # Categorical cross-entropy loss function
+    model.compile(
+        optimizer=sgd,
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    # fit our training model with 512 batch size and 500 epochs
+    # labelData is structured as a "one-hot" vector
+    history = model.fit(
+        X_train,
+        to_categorical(Y_train, num_classes=10),
+        epochs=500,
+        batch_size=512,
+        validation_split=0.25
+    )
+    # evaluate our final model with Test set that we split
+    evaluation = model.evaluate(
+        X_test,
+        to_categorical(Y_test, num_classes=10),
+        batch_size=512
+    )
+    # predict our final model with Test set that we split
+    prediction = model.predict(
+        X_test,
+        batch_size=512
+    )
+    return history, evaluation, prediction    
+
+"""
 # Stochastic gradient descent with 0.001 learning rate
 sgd = optimizers.SGD(lr=0.001)
 
 # Categorical cross-entropy loss function
-model = create_model(10, False, 0.2)
+model = create_model(10, True, 0.2)
 model.compile(
     optimizer=sgd,
     loss='categorical_crossentropy',
@@ -79,22 +112,30 @@ prediction = model.predict(
     X_test,
     batch_size=512
 )
-
-confusion = confusion_matrix(Y_test, np.argmax(prediction, axis=1))
-print(confusion)
-
+"""
+def print_confusion_matrix(prediction):
+    confusion = confusion_matrix(Y_test, np.argmax(prediction, axis=1))
+    print(confusion)
 
 def cross_validation(model, imgData, labelData):
     n_fold = 3
-    folds = StratifiedKFold(labelData, n_folds=n_fold, shuffle=True)
+    folds = StratifiedKFold(n_splits=n_fold, random_state=1, shuffle=True)
+    tempModel = model
+    evaluation = None
+    
+    for train_index, test_index in folds.split(imgData, labelData):
+        if(evaluation!=None):
+            model = None
+            model = tempModel
+        X_train, X_test = imgData[train_index], imgData[test_index]
+        Y_train, Y_test = labelData[train_index], labelData[test_index]
+        history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test)
 
-    for i, (train,test) in enumerate(skf):
-        model = None
-        
 
-
-
-
+model = create_model(10, False, 0)
+history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test)
+print(evaluation)
+print_confusion_matrix(prediction)
 # plot the accuracy of training set and validation set over epochs
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
