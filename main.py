@@ -49,7 +49,17 @@ def create_model(hiddenLayer, dropOut, dropSize):
     #return this model
     return model
 
-def train_evaluate(model, X_train, Y_train, X_test, Y_test):
+# train and evaluate the model
+# this function has optimization, activation functions
+# @param model, the given or pre-built model
+# @param X_train, the training image set
+# @param Y_train, the training label set corresponding to X_train
+# @param X_test, the testing image set
+# @param Y_test, the testing label set corresponding to X_test
+# @return history, scores of training model
+# @return evaluation, scores of final model
+# @return prediction, predictions of final model with test set
+def train_evaluate(model, X_train, Y_train, X_test, Y_test, validSplit):
     # Stochastic gradient descent with 0.001 learning rate
     sgd = optimizers.SGD(lr=0.001)
 
@@ -61,13 +71,24 @@ def train_evaluate(model, X_train, Y_train, X_test, Y_test):
     )
     # fit our training model with 512 batch size and 500 epochs
     # labelData is structured as a "one-hot" vector
-    history = model.fit(
-        X_train,
-        to_categorical(Y_train, num_classes=10),
-        epochs=500,
-        batch_size=512,
-        validation_split=0.25
-    )
+    history = None
+    if(validSplit):
+        print("here splited")
+        history = model.fit(
+            X_train,
+            to_categorical(Y_train, num_classes=10),
+            epochs=500,
+            batch_size=512,
+            validation_split=0.25
+        )
+    else:
+        print("not splited")
+        history = model.fit(
+            X_train,
+            to_categorical(Y_train, num_classes=10),
+            epochs=500,
+            batch_size=512
+        )
     # evaluate our final model with Test set that we split
     evaluation = model.evaluate(
         X_test,
@@ -114,41 +135,55 @@ prediction = model.predict(
     batch_size=512
 )
 """
+# print the confusion matrix
+# @param prediction, prediction from model.predict
 def print_confusion_matrix(prediction):
     confusion = confusion_matrix(Y_test, np.argmax(prediction, axis=1))
     print(confusion)
 
+# k-fold cross validation
+# number of folds is already defined as 3 inside the function
+# @param model, prebuilt model to used in cross validation
+# @param imgData, dataset of Mnist
+# @param labelData, dataset of labels corresponding to imgData
+# @return accuracies, scores for each iteration of evaluation
 def cross_validation(model, imgData, labelData):
-    n_fold = 3
+    n_fold = 3 # num of folds
+    # here we use stratified k-fold for randomness when folding the dataset
     folds = StratifiedKFold(n_splits=n_fold, random_state=1, shuffle=True)
+    # the given build model is copy for iterations 
     tempModel = deepcopy(model)
     accuracies = list()
     evaluation = None
-    
+    # for each iteration, use k-fold and evaluate the model
     for train_index, test_index in folds.split(imgData, labelData):
         if(evaluation!=None):
-            model = None
-            model = tempModel
+            model = None    # model is discarded after each iteration
+            model = deepcopy(tempModel) # model is reinitiated with the given model
             evaluation = None
+        # split into dataset into corresponing folds
         X_train, X_test = imgData[train_index], imgData[test_index]
         Y_train, Y_test = labelData[train_index], labelData[test_index]
-        evaluation = train_evaluate(model, X_train, Y_train, X_test, Y_test)[1]
+        # evaluate the model and receive the score
+        evaluation = train_evaluate(model, X_train, Y_train, X_test, Y_test, False)[1]
+        # each score is stored in a array
         accuracies.append(evaluation[1])
     return accuracies
 
 
 model = create_model(10, False, 0)
-# history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test)
-# print(evaluation)
-# print_confusion_matrix(prediction)
-# # plot the accuracy of training set and validation set over epochs
-# plt.plot(history.history['acc'])
-# plt.plot(history.history['val_acc'])
-# plt.title('model accuracy')
-# plt.ylabel('accuracy')
-# plt.xlabel('epoch')
-# plt.legend(['train', 'val'], loc='upper left')
-# plt.show()
+history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test, True)
+print(evaluation)
+print_confusion_matrix(prediction)
+# plot the accuracy of training set and validation set over epochs
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
 
-evaluations = cross_validation(model, imgData, labelData)
-print(evaluations)
+# scores = cross_validation(model, imgData, labelData)
+# print(scores)
+
