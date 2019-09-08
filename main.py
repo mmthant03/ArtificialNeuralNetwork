@@ -1,12 +1,12 @@
 import numpy as np
 from copy import deepcopy
+from statistics import mean
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.utils import to_categorical
 from keras import optimizers
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import StratifiedKFold
 from matplotlib import pyplot as plt
 
 # loading data from images.npy and labels.npy
@@ -102,39 +102,6 @@ def train_evaluate(model, X_train, Y_train, X_test, Y_test, validSplit):
     )
     return history, evaluation, prediction    
 
-"""
-# Stochastic gradient descent with 0.001 learning rate
-sgd = optimizers.SGD(lr=0.001)
-
-# Categorical cross-entropy loss function
-model = create_model(10, True, 0.2)
-model.compile(
-    optimizer=sgd,
-    loss='categorical_crossentropy',
-    metrics=['accuracy']
-)
-
-# fit our training model with 512 batch size and 500 epochs
-# labelData is structured as a "one-hot" vector
-history = model.fit(
-    X_train,
-    to_categorical(Y_train, num_classes=10),
-    epochs=500,
-    batch_size=512,
-    validation_split=0.25
-)
-
-# evaluate our final model with Test set that we split
-# model.evaluate(
-#     X_test,
-#     to_categorical(Y_test, num_classes=10),
-#     batch_size=512
-# )
-prediction = model.predict(
-    X_test,
-    batch_size=512
-)
-"""
 # print the confusion matrix
 # @param prediction, prediction from model.predict
 def print_confusion_matrix(prediction):
@@ -154,6 +121,7 @@ def cross_validation(model, imgData, labelData):
     # the given build model is copy for iterations 
     tempModel = deepcopy(model)
     accuracies = list()
+    errors = list()
     evaluation = None
     # for each iteration, use k-fold and evaluate the model
     for train_index, test_index in folds.split(imgData, labelData):
@@ -168,22 +136,48 @@ def cross_validation(model, imgData, labelData):
         evaluation = train_evaluate(model, X_train, Y_train, X_test, Y_test, False)[1]
         # each score is stored in a array
         accuracies.append(evaluation[1])
-    return accuracies
+        errors.append(evaluation[0])
+    return accuracies, errors
 
 
-model = create_model(10, False, 0)
-history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test, True)
-print(evaluation)
-print_confusion_matrix(prediction)
-# plot the accuracy of training set and validation set over epochs
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'val'], loc='upper left')
-plt.show()
+# model = create_model(10, False, 0)
+# history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test, True)
+# print(evaluation)
+# print_confusion_matrix(prediction)
+# # plot the accuracy of training set and validation set over epochs
+# plt.plot(history.history['acc'])
+# plt.plot(history.history['val_acc'])
+# plt.title('model accuracy')
+# plt.ylabel('accuracy')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'val'], loc='upper left')
+# plt.show()
 
 # scores = cross_validation(model, imgData, labelData)
 # print(scores)
 
+def ANNvsKFold():
+    modelKFoldOneLayer = create_model(1,False,0)
+    accuraciesKFold, errorsKFold = cross_validation(modelKFoldOneLayer, imgData, labelData)
+    accuracyKFoldOneLayer = mean(accuraciesKFold)
+    errorsKFoldOneLayer = mean(errorsKFold)
+
+    modelKFoldTwoLayer = create_model(2,False,0)
+    accuraciesKFold, errorsKFold = cross_validation(modelKFoldTwoLayer, imgData, labelData)
+    accuracyKFoldTwoLayer = mean(accuraciesKFold)
+    errorsKFoldTwoLayer = mean(errorsKFold)
+
+    modelKFoldTenLayer = create_model(10,False,0)
+    accuraciesKFold, errorsKFold = cross_validation(modelKFoldTenLayer, imgData, labelData)
+    accuracyKFoldTenLayer = mean(accuraciesKFold)
+    errorsKFoldTenLayer = mean(errorsKFold)
+
+    print("\n ============ 3-Fold Cross Validation with 1, 2, 10 hidden layers =============== \n")
+    print("Accuracy of 3-Fold CV ANN with 1 hidden layers: ", accuracyKFoldOneLayer, "\n")
+    print("Error of ANN with 1 hidden layers: ", errorsKFoldOneLayer, "\n")
+    print("Accuray of 3-Fold CV ANN with 2 hidden layers: ", accuracyKFoldTwoLayer, "\n")
+    print("Error of ANN with 2 hidden layers: ", errorsKFoldTwoLayer, "\n")
+    print("Accuray of 3-Fold CV ANN with 10 hidden layers: ", accuracyKFoldTenLayer, "\n")
+    print("Error of ANN with 10 hidden layers: ", errorsKFoldTenLayer, "\n")
+
+ANNvsKFold()
