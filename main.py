@@ -1,3 +1,5 @@
+## @author Myo Min Thant(mmthant@wpi.edu), Robert Dutile(radutile@wpi.edu)
+
 import numpy as np
 from copy import deepcopy
 from statistics import mean
@@ -24,10 +26,10 @@ X_train, X_test, Y_train, Y_test = train_test_split(imgData, labelData, test_siz
 # @param hiddenLayer int, number of hidden layers
 # @param dropOut boolean, True for dropOut
 # @param dropSize int, number of size to drop out on the first layer
-# example from task2:
+# example model from task2:
 # 1 input layer with 784 inputs
 # 10 hidden layers with 50 nodes each
-# 1 output layer with 1 node
+# 1 output layer with 1 node and length 10
 # New model with dropout 20%
 def create_model(hiddenLayer, dropOut, dropSize):
     # instantiate a new model
@@ -139,50 +141,54 @@ def cross_validation(model, imgData, labelData):
         errors.append(evaluation[0])
     return accuracies, errors
 
-
-# model = create_model(10, False, 0)
-# history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test, True)
-# print(evaluation)
-# print_confusion_matrix(prediction)
-# # plot the accuracy of training set and validation set over epochs
-# plt.plot(history.history['acc'])
-# plt.plot(history.history['val_acc'])
-# plt.title('model accuracy')
-# plt.ylabel('accuracy')
-# plt.xlabel('epoch')
-# plt.legend(['train', 'val'], loc='upper left')
-# plt.show()
+# build a model, train ANN and show repestive plot
+def build_train():
+    model = create_model(10, False, 0)
+    history, evaluation, prediction = train_evaluate(model, X_train, Y_train, X_test, Y_test, True)
+    print("Loss and Accuracy: ", evaluation)
+    print_confusion_matrix(prediction)
+    # plot the accuracy of training set and validation set over epochs
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
 
 # Robert
 # Use this for 32 vs 512 batch size
-model = create_model(10, False, 0)
-scores, errors = cross_validation(model, imgData, labelData)
-score = mean(scores)
-error = mean(errors)
-print(scores)
+def batch_size_differences():
+    model = create_model(10, False, 0)
+    scores, errors = cross_validation(model, imgData, labelData)
+    score = mean(scores)
+    error = mean(errors)
+    print("Accuracy: ", score)
+    print("Error: ", error)
 
-# def ANNvsKFold():
-#     modelKFoldOneLayer = create_model(1,False,0)
-#     accuraciesKFold, errorsKFold = cross_validation(modelKFoldOneLayer, imgData, labelData)
-#     accuracyKFoldOneLayer = mean(accuraciesKFold)
-#     errorsKFoldOneLayer = mean(errorsKFold)
+def ANNvsKFold():
+    modelKFoldOneLayer = create_model(1,False,0)
+    accuraciesKFold, errorsKFold = cross_validation(modelKFoldOneLayer, imgData, labelData)
+    accuracyKFoldOneLayer = mean(accuraciesKFold)
+    errorsKFoldOneLayer = mean(errorsKFold)
 
-#     modelKFoldTwoLayer = create_model(2,False,0)
-#     accuraciesKFold, errorsKFold = cross_validation(modelKFoldTwoLayer, imgData, labelData)
-#     accuracyKFoldTwoLayer = mean(accuraciesKFold)
-#     errorsKFoldTwoLayer = mean(errorsKFold)
+    modelKFoldTwoLayer = create_model(2,False,0)
+    accuraciesKFold, errorsKFold = cross_validation(modelKFoldTwoLayer, imgData, labelData)
+    accuracyKFoldTwoLayer = mean(accuraciesKFold)
+    errorsKFoldTwoLayer = mean(errorsKFold)
 
-#     modelKFoldTenLayer = create_model(10,False,0)
-#     accuraciesKFold, errorsKFold = cross_validation(modelKFoldTenLayer, imgData, labelData)
-#     accuracyKFoldTenLayer = mean(accuraciesKFold)
-#     errorsKFoldTenLayer = mean(errorsKFold)
+    modelKFoldTenLayer = create_model(10,False,0)
+    accuraciesKFold, errorsKFold = cross_validation(modelKFoldTenLayer, imgData, labelData)
+    accuracyKFoldTenLayer = mean(accuraciesKFold)
+    errorsKFoldTenLayer = mean(errorsKFold)
 
-#     print("\n ============ 3-Fold Cross Validation with 1, 2, 10 hidden layers =============== \n")
-#     print("Accuracy of 3-Fold CV ANN with 1 hidden layers: ", accuracyKFoldOneLayer, "\n")
-#     print("Error of ANN with 1 hidden layers: ", errorsKFoldOneLayer, "\n")
-#     print("Accuray of 3-Fold CV ANN with 2 hidden layers: ", accuracyKFoldTwoLayer, "\n")
-#     print("Error of ANN with 2 hidden layers: ", errorsKFoldTwoLayer, "\n")
-#     print("Accuray of 3-Fold CV ANN with 10 hidden layers: ", accuracyKFoldTenLayer, "\n")
-#     print("Error of ANN with 10 hidden layers: ", errorsKFoldTenLayer, "\n")
+    print("\n ============ 3-Fold Cross Validation with 1, 2, 10 hidden layers =============== \n")
+    print("Accuracy of 3-Fold CV ANN with 1 hidden layers: ", accuracyKFoldOneLayer, "\n")
+    print("Error of ANN with 1 hidden layers: ", errorsKFoldOneLayer, "\n")
+    print("Accuray of 3-Fold CV ANN with 2 hidden layers: ", accuracyKFoldTwoLayer, "\n")
+    print("Error of ANN with 2 hidden layers: ", errorsKFoldTwoLayer, "\n")
+    print("Accuray of 3-Fold CV ANN with 10 hidden layers: ", accuracyKFoldTenLayer, "\n")
+    print("Error of ANN with 10 hidden layers: ", errorsKFoldTenLayer, "\n")
 
-# ANNvsKFold()
+
+#build_train()
